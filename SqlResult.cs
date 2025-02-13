@@ -1,21 +1,30 @@
 ﻿public class SqlResult
 {
-    private readonly List<dynamic> _rows;
-    private readonly List<string> _columnNames;
+    public IList<SqlRow> Rows { get; }
+    public IList<SqlCol> Cols { get; }
 
     public SqlResult(IEnumerable<dynamic> rows)
     {
-        _rows = rows.ToList();
-        _columnNames = rows.Any() ? ((IDictionary<string, object>)rows.First()).Keys.ToList() : new List<string>();
+        if (rows == null || !rows.Any())
+        {
+            Rows = new List<SqlRow>();
+            Cols = new List<SqlCol>();
+            return;
+        }
+
+        // Convert dynamic rows to SqlRow objects
+        Rows = rows.Select(row => new SqlRow((IDictionary<string, object>)row)).ToList();
+
+        // Extract column names from the first row
+        var columnNames = ((IDictionary<string, object>)rows.First()).Keys;
+
+        // Create SqlCol objects for each column
+        Cols = columnNames.Select(colName => new SqlCol(rows.Select(row => ((IDictionary<string, object>)row)[colName]))).ToList();
     }
 
-    public dynamic Row(int rowIndex) => _rows[rowIndex];
+    // Get the number of rows
+    public int RowCount => Rows.Count;
 
-    public dynamic Col(int colIndex) => _rows.Select(row => ((IDictionary<string, object>)row).Values.ElementAt(colIndex)).ToList();
-
-    public dynamic Col(string colName) => _rows.Select(row => ((IDictionary<string, object>)row)[colName]).ToList();
-
-    public dynamic Item(int rowIndex, string colName) => ((IDictionary<string, object>)_rows[rowIndex])[colName];
-
-    public dynamic Item(int rowIndex, int colIndex) => ((IDictionary<string, object>)_rows[rowIndex]).Values.ElementAt(colIndex);
+    // Get the number of columns
+    public int ColCount => Cols.Count;
 }

@@ -16,8 +16,20 @@ public class SqlHelper
         using (var connection = new SqlConnection(connectionString))
         {
             connection.Open();
-            var result = connection.Query(query, parameters);
-            return new SqlResult(result);
+
+            if (parameters == null || parameters.Length == 0)
+            {
+                // Execute the query without parameters
+                var result = connection.Query(query);
+                return new SqlResult(result);
+            }
+            else
+            {
+                // Execute the query with parameters
+                var result = connection.Query(query, parameters);
+                return new SqlResult(result);
+            }
+
         }
     }
 
